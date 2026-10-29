@@ -30,3 +30,14 @@ hora_inicio TIME NOT NULL,
 hora_fin TIME NOT NULL,
 termina_dia_siguiente BOOLEAN NOT NULL DEFAULT FALSE
 );
+CREATE TABLE asignaciones (
+id_asignacion INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+id_trabajador INTEGER NOT NULL REFERENCES trabajadores(id_trabajador),
+id_turno INTEGER REFERENCES turnos(id_turno),
+fecha DATE NOT NULL,
+estado VARCHAR(20) NOT NULL CHECK (
+(estado = 'PROGRAMADO' AND id_turno IS NOT NULL)
+OR
+(estado IN ('LIBRE', 'LS') AND id_turno IS NULL)
+)
+);
