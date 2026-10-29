@@ -59,3 +59,12 @@ hora_fin TIME NOT NULL,
 cantidad_cupos INTEGER NOT NULL CHECK (cantidad_cupos > 0),
 estado VARCHAR(20) NOT NULL CHECK (estado IN ('ABIERTO', 'CERRADO', 'CANCELADO'))
 );
+CREATE TABLE postulaciones(
+id_postulacion INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+id_cupo INTEGER NOT NULL REFERENCES cupos_horas_extras(id_cupo),
+id_trabajador INTEGER NOT NULL REFERENCES trabajadores(id_trabajador),
+fecha_postulacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+estado VARCHAR(20) NOT NULL CHECK (estado IN ('PENDIENTE', 'APROBADA', 'RECHAZADA', 'CANCELADA')),
+id_lider_resuelve INTEGER REFERENCES usuarios(id_usuario),
+UNIQUE (id_cupo, id_trabajador)
+);
