@@ -22,3 +22,11 @@ apellido VARCHAR(20) NOT NULL,
 modalidad_turno VARCHAR(20) NOT NULL CHECK (modalidad_turno IN ('FIJO', 'ROTATIVO')),
 id_cargo INTEGER NOT NULL REFERENCES cargos(id_cargo)
 );
+CREATE TABLE turnos (
+ID_turno INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+codigo_turno VARCHAR(20) NOT NULL UNIQUE, 
+nombre_turno VARCHAR(30) NOT NULL,
+hora_inicio TIME NOT NULL,
+hora_fin TIME NOT NULL,
+termina_dia_siguiente BOOLEAN NOT NULL DEFAULT FALSE
+);
