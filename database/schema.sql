@@ -41,3 +41,11 @@ OR
 (estado IN ('LIBRE', 'LS') AND id_turno IS NULL)
 )
 );
+CREATE TABLE ausencias(
+id_ausencia INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+id_trabajador INTEGER NOT NULL REFERENCES trabajadores(id_trabajador),
+tipo_ausencia VARCHAR(30) NOT NULL CHECK (tipo_ausencia IN ('VACACIONES', 'LICENCIA', 'INASISTENCIA')),
+fecha_inicio DATE NOT NULL,
+fecha_fin DATE NOT NULL CHECK (fecha_fin >=fecha_inicio),
+observacion VARCHAR(255)
+);
