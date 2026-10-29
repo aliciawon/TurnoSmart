@@ -49,3 +49,13 @@ fecha_inicio DATE NOT NULL,
 fecha_fin DATE NOT NULL CHECK (fecha_fin >=fecha_inicio),
 observacion VARCHAR(255)
 );
+CREATE TABLE cupos_horas_extras(
+id_cupo INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+id_lider INTEGER NOT NULL REFERENCES usuarios(id_usuario),
+id_cargo INTEGER NOT NULL REFERENCES cargos(id_cargo),
+fecha DATE NOT NULL,
+hora_inicio TIME NOT NULL,
+hora_fin TIME NOT NULL,
+cantidad_cupos INTEGER NOT NULL CHECK (cantidad_cupos > 0),
+estado VARCHAR(20) NOT NULL CHECK (estado IN ('ABIERTO', 'CERRADO', 'CANCELADO'))
+);
