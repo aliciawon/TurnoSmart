@@ -68,3 +68,11 @@ estado VARCHAR(20) NOT NULL CHECK (estado IN ('PENDIENTE', 'APROBADA', 'RECHAZAD
 id_lider_resuelve INTEGER REFERENCES usuarios(id_usuario),
 UNIQUE (id_cupo, id_trabajador)
 );
+CREATE TABLE registros_cumplimiento(
+id_registro INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+id_asignacion INTEGER NOT NULL REFERENCES asignaciones(id_asignacion),
+estado VARCHAR(20) NOT NULL CHECK (estado IN ('CUMPLIDO', 'NO_CUMPLIDO', 'CANCELADO')),
+fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+observacion VARCHAR(255),
+id_usuario_registra INTEGER NOT NULL REFERENCES usuarios(id_usuario)
+);
