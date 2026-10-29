@@ -13,3 +13,12 @@ CREATE TABLE cargos (
 id_cargo INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 nombre_cargo VARCHAR (50) NOT NULL UNIQUE
 );
+CREATE TABLE trabajadores (
+id_usuario INTEGER UNIQUE REFERENCES usuarios(id_usuario),
+id_trabajador INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+rut varchar(12) NOT NULL UNIQUE,
+nombre VARCHAR(20) NOT NULL,
+apellido VARCHAR(20) NOT NULL,
+modalidad_turno VARCHAR(20) NOT NULL CHECK (modalidad_turno IN ('FIJO', 'ROTATIVO')),
+id_cargo INTEGER NOT NULL REFERENCES cargos(id_cargo)
+);
