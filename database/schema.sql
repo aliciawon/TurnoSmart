@@ -76,3 +76,12 @@ fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 observacion VARCHAR(255),
 id_usuario_registra INTEGER NOT NULL REFERENCES usuarios(id_usuario)
 );
+CREATE TABLE auditoria(
+id_auditoria INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+id_usuario INTEGER NOT NULL REFERENCES usuarios(id_usuario),
+accion VARCHAR(100) NOT NULL,
+tabla_afectada VARCHAR(50) NOT NULL,
+id_registro_afectado INTEGER NOT NULL,
+fecha_accion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+detalle VARCHAR(255)
+);
