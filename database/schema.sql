@@ -39,7 +39,8 @@ estado VARCHAR(20) NOT NULL CHECK (
 (estado = 'PROGRAMADO' AND id_turno IS NOT NULL)
 OR
 (estado IN ('LIBRE', 'LS') AND id_turno IS NULL)
-)
+),
+UNIQUE (id_trabajador, fecha)
 );
 CREATE TABLE ausencias(
 id_ausencia INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
