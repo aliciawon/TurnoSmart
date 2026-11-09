@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TurnoSmart</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Bienvenido a TurnoSmart</h1>
+    <p>Sistema de gestión de turnos y horas extras.</p>
+    <form method="post" action="/login">
+        <label for="correo">Correo electrónico:</label>
+        <input type="email" id="correo" name="correo" required>
+        <label for="contrasena">Contraseña:</label>
+        <input type="password" id="contrasena" name="contrasena" required>
+        <button type="submit" id="inicio-sesion" name="inicio-sesion">Iniciar sesión</button>
+    </form>
+    <a href="/recuperar-contrasena">Olvidé mi contraseña</a>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,56 @@
+    body {
+        background-color: #3d3939;
+        font-family: Arial, sans-serif;
+    }
+    button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        text-align: center;
+    }
+    h1 {
+        color: #ff0707;
+        text-align: center;
+    }
+    p {
+        text-align: center;
+    }
+    label {
+        display: block;
+        margin-top: 10px;
+        text-align: center;
+    }
+    form {
+                max-width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f2f2f2;
+        border-radius: 5px;
+    }
+        #correo {
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 300px;
+        }
+        #contrasena {
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 300px;
+        }
+        #inicio-sesion {
+            display: block;
+            margin: 20px auto;
+            width: 100%;
+            max-width: 300px;
+        }
+    a {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #4d42e9;
+        text-decoration: none;
+    }
