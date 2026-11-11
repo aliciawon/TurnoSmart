@@ -1,0 +1,28 @@
+/* TABLA DE TRABAJADORES */
+table {
+    margin: 30px auto;
+    width: 90%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 15px;
+    border: 1px solid #666666;
+    text-align: center;
+}
+
+/* BOTÓN AGREGAR TRABAJADOR */
+a {
+    display: inline-block;
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 25px;
+    border: 2px solid white;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+a:hover {
+    background-color: #388E3C;
+}

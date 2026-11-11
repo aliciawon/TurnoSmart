@@ -1,0 +1,40 @@
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trabajadores.css') }}">
+<h1>Gestión de Trabajadores</h1>
+<p>Administración del personal de TurnoSmart.</p>
+
+<a href="{{ url_for('jefatura.ingreso_trabajadores') }}">
+    Agregar Trabajador
+</a>
+<a href="{{ url_for('panel') }}" class="btn-volver">
+    Volver al Panel
+</a>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Correo Electrónico</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        {% for trabajador in trabajadores %}
+        <tr>
+            <td>{{ trabajador.id }}</td>
+            <td>{{ trabajador.nombre }}</td>
+            <td>{{ trabajador.correo }}</td>
+            <td>{{ trabajador.rol }}</td>
+            <td>
+                <button type="button" name="eliminar">Eliminar</button>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5">Todavía no hay trabajadores registrados.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

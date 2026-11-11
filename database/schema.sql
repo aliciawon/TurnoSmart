@@ -9,9 +9,15 @@ password_hash VARCHAR(255) NOT NULL,
 id_rol INTEGER NOT NULL REFERENCES roles (id_rol)
 );
 CREATE TABLE cargos (
-id_cargo INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-nombre_cargo VARCHAR (50) NOT NULL UNIQUE
+    id_cargo INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre_cargo VARCHAR(50) NOT NULL UNIQUE
 );
+INSERT INTO cargos (nombre_cargo)
+VALUES
+    ('Líder'),
+    ('Movilizador'),
+    ('Peatón')
+ON CONFLICT (nombre_cargo) DO NOTHING;
 CREATE TABLE trabajadores (
 id_usuario INTEGER UNIQUE NOT NULL REFERENCES usuarios(id_usuario),
 id_trabajador INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

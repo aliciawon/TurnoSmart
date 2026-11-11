@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Trabajador - TurnoSmart</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ingreso-trabajadores.css') }}">
+</head>
+<body>
+
+    <h1>Registrar Trabajador</h1>
+    <p>Ingrese los datos del nuevo trabajador.</p>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        
+        {% if error %}
+          <p style="color: red;">{{ error }}</p>
+         {% endif %}
+
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre"
+               maxlength="20" required>
+
+        <label for="apellido">Apellido:</label>
+        <input type="text" id="apellido" name="apellido"
+               maxlength="20" required>
+
+        <label for="rut">RUT:</label>
+        <input type="text" id="rut" name="rut"
+               maxlength="12"
+               placeholder="12345678-9" required>
+
+        <label for="correo">Correo electrónico:</label>
+        <input type="email" id="correo" name="correo" required>
+
+        <label for="contrasena">Contraseña inicial:</label>
+        <input type="password" id="contrasena"
+               name="contrasena" required>
+
+        <label for="rol">Rol:</label>
+        <select id="rol" name="rol" required>
+            <option value="">Seleccione un rol</option>
+            <option value="1">Jefatura</option>
+            <option value="2">Líder</option>
+            <option value="3">Trabajador</option>
+        </select>
+
+        <label for="modalidad_turno">Modalidad de turno:</label>
+        <select id="modalidad_turno" name="modalidad_turno" required>
+            <option value="">Seleccione una modalidad</option>
+            <option value="FIJO">Fijo</option>
+            <option value="ROTATIVO">Rotativo</option>
+        </select>
+
+        <label for="cargo">Cargo:</label>
+        <select id="cargo" name="cargo" required>
+            <option value="">Seleccione un cargo</option>
+            {% for cargo in cargos %}
+                <option value="{{ cargo.id_cargo }}">
+                    {{ cargo.nombre_cargo }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Guardar Trabajador</button>
+
+    </form>
+
+    <a href="{{ url_for('jefatura.jefatura_trabajadores') }}">
+        Volver a Trabajadores
+    </a>
+
+</body>
+</html>
