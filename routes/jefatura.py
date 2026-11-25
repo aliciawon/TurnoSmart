@@ -230,3 +230,35 @@ def ingreso_trabajadores():
 
     except psycopg.Error:
         return "Error al procesar los datos", 500
+
+@jefatura_bp.route("/configuracion")
+def configuracion():
+    acceso = acceso_jefatura()
+    if acceso is not None:
+        return acceso
+
+    try:
+        with conectar_bd() as conexion:
+            with conexion.cursor() as cursor:
+                cursor.execute("""
+                    SELECT
+                        id_turno,
+                        codigo_turno,
+                        nombre_turno,
+                        hora_inicio,
+                        hora_fin,
+                        termina_dia_siguiente
+                    FROM turnos
+                    ORDER BY hora_inicio
+                """)
+
+                turnos = cursor.fetchall()
+                
+
+    except psycopg.Error:
+        return "Error al consultar los turnos", 500
+
+    return render_template(
+        "jefatura/configuracion.html",
+        turnos=turnos
+    )

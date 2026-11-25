@@ -125,3 +125,11 @@ CREATE TABLE IF NOT EXISTS roles_mensuales (
     fecha_publicacion TIMESTAMP,
     UNIQUE (mes, anio)
 );
+
+CREATE TABLE IF NOT EXISTS dotacion_turnos (
+    id_dotacion INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_turno INTEGER NOT NULL UNIQUE
+        REFERENCES turnos(id_turno),
+    cantidad_minima INTEGER NOT NULL
+        CHECK (cantidad_minima > 0)
+);

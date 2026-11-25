@@ -24,10 +24,10 @@
         <i class="bi bi-bar-chart-fill"></i>
         <span>Reporte</span>
     </button>
-    <button type="button" id="configuracion">
-        <i class="bi bi-gear-fill"></i>
-        <span>Configuración</span>
-    </button>
+    <a href="{{ url_for('jefatura.configuracion') }}" id="configuracion">
+    <i class="bi bi-gear-fill"></i>
+    <span>Configuración</span>
+</a>
 </div>
 
 <form action="{{ url_for('cerrar_sesion') }}" method="POST">

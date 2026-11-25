@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - TurnoSmart</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/trabajadores.css') }}">
+</head>
+<body>
+
+    <h1>Configuración de TurnoSmart</h1>
+    <p>Administración de códigos y horarios de turnos.</p>
+
+    <a href="{{ url_for('panel') }}" class="btn-volver">
+        Volver al Panel
+    </a>
+
+    <h2>Turnos registrados</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre del turno</th>
+                <th>Hora de entrada</th>
+                <th>Hora de salida</th>
+                <th>Termina al día siguiente</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for turno in turnos %}
+            <tr>
+                <td>{{ turno[1] }}</td>
+                <td>{{ turno[2] }}</td>
+                <td>{{ turno[3].strftime('%H:%M') }}</td>
+                <td>{{ turno[4].strftime('%H:%M') }}</td>
+                <td>{{ 'Sí' if turno[5] else 'No' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5">
+                    No hay turnos registrados.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
