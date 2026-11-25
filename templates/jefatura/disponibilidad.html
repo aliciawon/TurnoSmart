@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title> Disponibilidad - TurnoSmart</title>
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/trabajadores.css') }}">
+    </head>
+    <body>
+        <h1>Gestion de disponibilidad</h1>
+        <p>Administración de vacaciones, licencias e inasistencia.</p>
+        <a href="{{ url_for('panel') }}" class="btn-volver">
+            Volver al panel
+        </a>
+        <h2>Registrar ausencia</h2>
+        <form method="POST" action="{{ url_for('jefatura.disponibilidad') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <label>Trabajador</label>
+            <select name="id_trabajador" required>
+                <option value="">Selecciona trabajador</option>
+                {% for trabajador in trabajadores %}
+                <option value="{{ trabajador[0] }}">
+                    {{ trabajador[1] }} {{ trabajador[2] }}
+                </option>
+                {% endfor %}
+            </select>
+            <label>Tipo de asencia</label>
+            <select name="tipo_ausencia" required>
+                <option value="">Seleccionar ausencia</option>
+                <option value="VACACIONES">Vacaciones</option>
+                <option value="LICENCIA">Licencia médica</option>
+                <option value="INASISTENCIA">Inasistencia</option>
+            </select>
+            <label>Fechade inicio</label>
+            <input type="date" name="fecha_inicio" required>
+            <label>Fecha de término</label>
+            <input type="date" name="fecha_fin" required>
+            <labe>Observación</labe>
+            <textarea name="obsrvacion" maxlength="25"></textarea>
+            <button type="submit">Registrar ausencia</button>
+        </form>
+        <h2>Ausencia registrada</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Trabajador</th>
+                    <th>Tipo de ausencia</th>
+                    <th>Fecha de inicio</th>
+                    <th>Fecha de termino</th>
+                    <th>Observación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ausencia in ausencias %}
+                <tr>
+                    <td>{{ ausencia[1] }} {{ ausencia[2] }}</td>
+                    <td>{{ ausencia[3] }}</td>
+                    <td>{{ ausencia[4].strftime('%d/%m/%Y') }}</td>
+                    <td>{{ ausencia[5].strftime('%d/%m/%Y') }}</td>
+                    <td>{{ ausencia[6] or 'sin observación' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">No hay ausencias registradas.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </body>
+</html>

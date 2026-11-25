@@ -6,6 +6,7 @@ import secrets
 import psycopg
 from psycopg import errors
 from argon2 import PasswordHasher
+from datetime import date
 from flask import (
     Blueprint,
     render_template,
@@ -14,6 +15,7 @@ from flask import (
     url_for,
     request,
 )
+
 
 jefatura_bp = Blueprint("jefatura", __name__)
 ph = PasswordHasher()
@@ -329,5 +331,146 @@ def configuracion():
         "jefatura/configuracion.html",
         turnos=turnos,
         dotaciones=dotaciones,
+        csrf_token=session["csrf_token"]
+    )
+@jefatura_bp.route("/disponibilidad", methods=["GET", "POST"])
+def disponibilidad():
+    acceso = acceso_jefatura()
+    if acceso is not None:
+        return acceso
+
+    # Registrar una nueva ausencia
+    if request.method == "POST":
+
+        token = request.form.get("csrf_token", "")
+
+        if not token or token != session.get("csrf_token"):
+            return "Solicitud no válida", 400
+
+        id_trabajador = request.form.get("id_trabajador", "")
+        tipo_ausencia = request.form.get("tipo_ausencia", "")
+        fecha_inicio = request.form.get("fecha_inicio", "")
+        fecha_fin = request.form.get("fecha_fin", "")
+        observacion = request.form.get("observacion", "").strip()
+        
+
+        # Validar trabajador y fechas
+        try:
+            id_trabajador = int(id_trabajador)
+            fecha_inicio = date.fromisoformat(fecha_inicio)
+            fecha_fin = date.fromisoformat(fecha_fin)
+
+        except ValueError:
+            return "Trabajador o fechas no válidas", 400
+
+        # Validar tipo de ausencia
+        if tipo_ausencia not in (
+            "VACACIONES", "LICENCIA", "INASISTENCIA"
+        ):
+            return "Tipo de ausencia no válido", 400
+
+        # Validar periodo
+        if fecha_fin < fecha_inicio:
+            return "La fecha de término no puede ser anterior al inicio", 400
+
+        if len(observacion) > 255:
+            return "La observación es demasiado extensa", 400
+
+        try:
+            with conectar_bd() as conexion:
+                with conexion.cursor() as cursor:
+
+                    # Comprobar que el trabajador existe
+                    cursor.execute("""
+                        SELECT id_trabajador
+                        FROM trabajadores
+                        WHERE id_trabajador = %s
+                        FOR UPDATE
+                    """, (id_trabajador,))
+
+                    if cursor.fetchone() is None:
+                        return "El trabajador no existe", 400
+
+                    # Comprobar ausencias superpuestas
+                    cursor.execute("""
+                        SELECT id_ausencia
+                        FROM ausencias
+                        WHERE id_trabajador = %s
+                        AND fecha_inicio <= %s
+                        AND fecha_fin >= %s
+                    """, (
+                        id_trabajador,
+                        fecha_fin,
+                        fecha_inicio
+                    ))
+
+                    if cursor.fetchone() is not None:
+                        return "El trabajador ya tiene una ausencia durante ese periodo", 400
+
+                    # Registrar ausencia
+                    cursor.execute("""
+                        INSERT INTO ausencias (
+                            id_trabajador,
+                            tipo_ausencia,
+                            fecha_inicio,
+                            fecha_fin,
+                            observacion
+                        )
+                        VALUES (%s, %s, %s, %s, %s)
+                    """, (
+                        id_trabajador,
+                        tipo_ausencia,
+                        fecha_inicio,
+                        fecha_fin,
+                        observacion
+                    ))
+
+        except psycopg.Error:
+            return "Error al registrar la ausencia", 500
+
+        return redirect(url_for("jefatura.disponibilidad"))
+
+    # Consultar trabajadores y ausencias
+    try:
+        with conectar_bd() as conexion:
+            with conexion.cursor() as cursor:
+
+                cursor.execute("""
+                    SELECT
+                        id_trabajador,
+                        nombre,
+                        apellido
+                    FROM trabajadores
+                    ORDER BY nombre, apellido;
+                """)
+
+                trabajadores = cursor.fetchall()
+
+                cursor.execute("""
+                    SELECT
+                        ausencias.id_ausencia,
+                        trabajadores.nombre,
+                        trabajadores.apellido,
+                        ausencias.tipo_ausencia,
+                        ausencias.fecha_inicio,
+                        ausencias.fecha_fin,
+                        ausencias.observacion
+                    FROM ausencias
+                    INNER JOIN trabajadores
+                    ON ausencias.id_trabajador = trabajadores.id_trabajador
+                    ORDER BY ausencias.fecha_inicio;
+                """)
+
+                ausencias = cursor.fetchall()
+
+    except psycopg.Error:
+        return "Error al consultar disponibilidad", 500
+
+    session["csrf_token"] = secrets.token_hex(16)
+
+    return render_template(
+        "jefatura/disponibilidad.html",
+        trabajadores=trabajadores,
+        ausencias=ausencias,
         csrf_token=session["csrf_token"]
     )
