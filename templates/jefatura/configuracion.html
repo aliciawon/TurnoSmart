@@ -47,6 +47,51 @@
             {% endfor %}
         </tbody>
     </table>
+<h2>Dotación mínima por turno</h2>
+
+<p>Cantidad mínima de trabajadores requeridos por turno.</p>
+
+<form method="POST" action="{{ url_for('jefatura.configuracion') }}">
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre del turno</th>
+                <th>Cantidad mínima</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for dotacion in dotaciones %}
+            <tr>
+                <td>{{ dotacion[0] }}</td>
+                <td>{{ dotacion[1] }}</td>
+                <td>
+                    <input
+                        type="number"
+                        name="cantidad_{{ dotacion[0] }}"
+                        value="{{ dotacion[2] }}"
+                        min="1"
+                        required
+                    >
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3">
+                    No hay dotaciones registradas.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="submit">Guardar cambios</button>
+
+</form>
 
 </body>
 </html>

@@ -231,15 +231,68 @@ def ingreso_trabajadores():
     except psycopg.Error:
         return "Error al procesar los datos", 500
 
-@jefatura_bp.route("/configuracion")
+@jefatura_bp.route("/configuracion", methods=["GET", "POST"])
 def configuracion():
     acceso = acceso_jefatura()
     if acceso is not None:
         return acceso
 
+    # Validar y guardar los cambios
+    if request.method == "POST":
+    
+
+        token = request.form.get("csrf_token", "")
+
+        if not token or token != session.get("csrf_token"):
+            return "Solicitud no válida", 400
+
+        try:
+            cantidades = {}
+
+            for codigo in ("24", "11", "7"):
+                cantidad = int(
+                    request.form.get(f"cantidad_{codigo}", "")
+                )
+
+                if cantidad < 1 or cantidad > 2147483647:
+                    return "Cantidad no válida", 400
+
+                cantidades[codigo] = cantidad
+
+        except ValueError:
+            return "Debes ingresar cantidades válidas", 400
+
+        try:
+            with conectar_bd() as conexion:
+                with conexion.cursor() as cursor:
+
+                    for codigo, cantidad in cantidades.items():
+                        cursor.execute("""
+                            UPDATE dotacion_turnos
+                            SET cantidad_minima = %s
+                            WHERE id_turno = (
+                                SELECT id_turno
+                                FROM turnos
+                                WHERE codigo_turno = %s
+                            )
+                        """, (cantidad, codigo))
+
+                        if cursor.rowcount != 1:
+                            raise ValueError("Dotación inexistente")
+
+        except ValueError:
+            return "No se encontraron todas las dotaciones", 400
+
+        except psycopg.Error:
+            return "Error al actualizar la dotación", 500
+
+        return redirect(url_for("jefatura.configuracion"))
+
+    # Consultar los datos
     try:
         with conectar_bd() as conexion:
             with conexion.cursor() as cursor:
+
                 cursor.execute("""
                     SELECT
                         id_turno,
@@ -253,12 +306,28 @@ def configuracion():
                 """)
 
                 turnos = cursor.fetchall()
-                
+
+                cursor.execute("""
+                    SELECT
+                        codigo_turno,
+                        nombre_turno,
+                        cantidad_minima
+                    FROM turnos
+                    INNER JOIN dotacion_turnos
+                    ON turnos.id_turno = dotacion_turnos.id_turno
+                    ORDER BY hora_inicio
+                """)
+
+                dotaciones = cursor.fetchall()
 
     except psycopg.Error:
-        return "Error al consultar los turnos", 500
+        return "Error al consultar la configuración", 500
+
+    session["csrf_token"] = secrets.token_hex(16)
 
     return render_template(
         "jefatura/configuracion.html",
-        turnos=turnos
+        turnos=turnos,
+        dotaciones=dotaciones,
+        csrf_token=session["csrf_token"]
     )
