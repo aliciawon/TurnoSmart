@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Planificación - TurnoSmart</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/trabajadores.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/planificacion.css') }}">
+</head>
+
+<body>
+
+    <h1>Planificación mensual</h1>
+
+    <p>Generación y administración de propuestas de turnos.</p>
+
+    <a href="{{ url_for('panel') }}" class="btn-volver">
+        Volver al Panel
+    </a>
+
+    <!-- SELECCIONAR PERIODO -->
+
+    <h2>Seleccionar periodo</h2>
+
+    <form method="GET"
+          action="{{ url_for('jefatura.planificacion') }}"
+          class="form-periodo">
+
+        <label>Mes</label>
+
+        <select name="mes" required>
+
+            {% set meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril',
+                'Mayo', 'Junio', 'Julio', 'Agosto',
+                'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ] %}
+
+            {% for nombre_mes in meses %}
+
+            <option value="{{ loop.index }}"
+                {% if loop.index == mes %}selected{% endif %}>
+
+                {{ nombre_mes }}
+
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+        <label>Año</label>
+
+        <input type="number"
+               name="anio"
+               value="{{ anio }}"
+               min="2026"
+               max="2100"
+               required>
+
+        <button type="submit" class="btn-generar">
+            Consultar / Generar propuesta
+        </button>
+
+    </form>
+
+    <!-- ESTADO DEL ROL -->
+
+    <h2>Rol mensual - {{ meses[mes - 1] }} {{ anio }}</h2>
+
+    <div class="acciones-rol">
+
+        <strong>Estado del rol:</strong>
+
+        {% if estado_rol == "BORRADOR" %}
+
+            <span class="estado-borrador">
+                BORRADOR
+            </span>
+
+        {% elif estado_rol == "PUBLICADO" %}
+
+            <span class="estado-publicado">
+                PUBLICADO
+            </span>
+
+        {% else %}
+
+            <span class="estado-sin-guardar">
+                SIN GUARDAR
+            </span>
+
+        {% endif %}
+
+        {% if estado_rol == "SIN GUARDAR" and propuesta %}
+
+        <form method="POST"
+              action="{{ url_for('jefatura.planificacion') }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token }}">
+
+            <input type="hidden"
+                   name="mes"
+                   value="{{ mes }}">
+
+            <input type="hidden"
+                   name="anio"
+                   value="{{ anio }}">
+
+            <button type="submit"
+                    class="btn-guardar"
+                    onclick="return confirm('¿Desea guardar este rol como borrador?')">
+
+                Guardar borrador
+
+            </button>
+
+        </form>
+
+        {% endif %}
+
+    </div>
+
+    <!-- ROL MENSUAL -->
+
+    <div class="contenedor-rol">
+
+        <table class="tabla-rol">
+
+            <thead>
+
+                <tr>
+
+                    <th rowspan="2">N°</th>
+                    <th rowspan="2">Trabajador</th>
+
+                    {% for dia in dias %}
+
+                    <th class="{{ 'fin-semana' if dia.fin_semana else '' }}">
+                        {{ dia.nombre }}
+                    </th>
+
+                    {% endfor %}
+
+                </tr>
+
+                <tr>
+
+                    {% for dia in dias %}
+
+                    <th>{{ dia.numero }}</th>
+
+                    {% endfor %}
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for trabajador in propuesta %}
+
+                <tr>
+
+                    <td>{{ loop.index }}</td>
+
+                    <td class="nombre-trabajador">
+                        {{ trabajador.nombre }}
+                        {{ trabajador.apellido }}
+                    </td>
+
+                    {% for turno in trabajador.turnos %}
+
+                    <td class="turno-{{ turno.codigo }}">
+                        {{ turno.codigo }}
+                    </td>
+
+                    {% endfor %}
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="{{ dias|length + 2 }}">
+                        No hay trabajadores registrados.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- SIMBOLOGIA -->
+
+    <h3>Simbología</h3>
+
+    <div class="simbologia">
+
+        <span>24: Mañana</span>
+        <span>66: Mañana reducida</span>
+        <span>11: Tarde</span>
+        <span>180: Tarde reducida</span>
+        <span>7: Noche</span>
+        <span>L: Libre</span>
+        <span>LS: Saliente libre</span>
+        <span>VAC: Vacaciones</span>
+        <span>LIC: Licencia</span>
+        <span>INA: Inasistencia</span>
+        <span>-: Sin asignación</span>
+
+    </div>
+
+    <!-- COBERTURA DIARIA -->
+
+    <h2>Cobertura diaria de turnos</h2>
+
+    <p>
+        Comparación entre los trabajadores asignados
+        y la dotación mínima configurada.
+    </p>
+
+    <div class="contenedor-rol">
+
+        <table class="tabla-rol tabla-cobertura">
+
+            <thead>
+
+                <tr>
+
+                    <th>Fecha</th>
+                    <th>Turno</th>
+                    <th>Dotación mínima</th>
+                    <th>Asignados</th>
+                    <th>Faltantes</th>
+                    <th>Estado</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for dia in cobertura %}
+
+                    {% for turno in dia.turnos %}
+
+                    <tr>
+
+                        <td>
+                            {{ dia.fecha.strftime('%d-%m-%Y') }}
+                        </td>
+
+                        <td>{{ turno.nombre }}</td>
+
+                        <td>{{ turno.minimo }}</td>
+
+                        <td>{{ turno.asignados }}</td>
+
+                        <td>{{ turno.faltantes }}</td>
+
+                        <td class="{{ 'cobertura-completa' if turno.cumple else 'cobertura-insuficiente' }}">
+
+                            {% if turno.cumple %}
+
+                                Completa
+
+                            {% else %}
+
+                                Falta personal
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="6">
+                            No hay información de cobertura.
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,171 @@
+.contenedor-rol {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 25px;
+}
+
+.tabla-rol {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    color: black;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    margin: 0;
+}
+
+.tabla-rol th,
+.tabla-rol td {
+    border: 1px solid #777;
+    padding: 8px;
+    text-align: center;
+    min-width: 30px;
+    white-space: nowrap;
+}
+
+.tabla-rol th {
+    background-color: #dedede;
+    color: black;
+}
+
+.tabla-rol .fin-semana {
+    background-color: #ffff00;
+}
+
+.tabla-rol .nombre-trabajador {
+    min-width: 180px;
+    text-align: left;
+}
+
+.tabla-rol .turno-L,
+.tabla-rol .turno-LS {
+    background-color: #c6efce;
+}
+
+.tabla-rol .turno-VAC {
+    background-color: #ffff00;
+}
+
+.tabla-rol .turno-LIC {
+    background-color: #ffcc99;
+}
+
+.tabla-rol .turno-INA {
+    background-color: #ffc7ce;
+}
+
+.simbologia {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.simbologia span {
+    padding: 8px 12px;
+    border: 1px solid #777;
+    border-radius: 5px;
+}
+
+/* COBERTURA DIARIA */
+
+.tabla-cobertura {
+    max-width: 1000px;
+    margin-bottom: 30px;
+}
+
+.tabla-cobertura .cobertura-completa {
+    background-color: #c6efce;
+    color: #006100;
+    font-weight: bold;
+}
+
+.tabla-cobertura .cobertura-insuficiente {
+    background-color: #ffc7ce;
+    color: #9c0006;
+    font-weight: bold;
+}
+/* SELECCION DEL PERIODO */
+
+.form-periodo {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.form-periodo select,
+.form-periodo input {
+    padding: 10px;
+    border: 1px solid #777;
+    border-radius: 5px;
+}
+
+/* ACCIONES DEL ROL */
+
+.acciones-rol {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.acciones-rol form {
+    margin: 0;
+}
+
+/* BOTONES */
+
+.btn-generar,
+.btn-guardar {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-generar {
+    background-color: #2563eb;
+}
+
+.btn-generar:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-guardar {
+    background-color: #16a34a;
+}
+
+.btn-guardar:hover {
+    background-color: #15803d;
+}
+
+/* ESTADOS DEL ROL */
+
+.estado-sin-guardar,
+.estado-borrador,
+.estado-publicado {
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.estado-sin-guardar {
+    background-color: #6b7280;
+    color: white;
+}
+
+.estado-borrador {
+    background-color: #facc15;
+    color: black;
+}
+
+.estado-publicado {
+    background-color: #16a34a;
+    color: white;
+}

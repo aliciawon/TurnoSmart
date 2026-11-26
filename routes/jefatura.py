@@ -7,6 +7,11 @@ import psycopg
 from psycopg import errors
 from argon2 import PasswordHasher
 from datetime import date
+from services.generador_rol import (
+    obtener_dias_mes,
+    generar_propuesta,
+    calcular_cobertura
+)
 from flask import (
     Blueprint,
     render_template,
@@ -333,6 +338,7 @@ def configuracion():
         dotaciones=dotaciones,
         csrf_token=session["csrf_token"]
     )
+
 @jefatura_bp.route("/disponibilidad", methods=["GET", "POST"])
 def disponibilidad():
     acceso = acceso_jefatura()
@@ -472,5 +478,365 @@ def disponibilidad():
         "jefatura/disponibilidad.html",
         trabajadores=trabajadores,
         ausencias=ausencias,
+        csrf_token=session["csrf_token"]
+    )
+
+@jefatura_bp.route("/planificacion", methods=["GET", "POST"])
+def planificacion():
+
+    acceso = acceso_jefatura()
+
+    if acceso is not None:
+        return acceso
+
+    hoy = date.today()
+
+    datos = request.form if request.method == "POST" else request.args
+
+    mes = datos.get("mes", hoy.month, type=int)
+    anio = datos.get("anio", hoy.year, type=int)
+
+    if not 1 <= mes <= 12 or not 2026 <= anio <= 2100:
+        return "Mes o año no válido", 400
+
+    # Validar seguridad
+
+    if request.method == "POST":
+
+        token = request.form.get("csrf_token", "")
+
+        if not token or token != session.get("csrf_token"):
+            return "Solicitud no válida", 400
+
+    session.setdefault("csrf_token", secrets.token_hex(16))
+
+    dias = obtener_dias_mes(anio, mes)
+
+    fecha_inicio = dias[0]["fecha"]
+    fecha_fin = dias[-1]["fecha"]
+
+    estado_rol = "SIN GUARDAR"
+
+    try:
+
+        with conectar_bd() as conexion:
+
+            with conexion.cursor() as cursor:
+
+                # Consultar trabajadores
+
+                cursor.execute("""
+                    SELECT
+                        id_trabajador,
+                        nombre,
+                        apellido,
+                        modalidad_turno,
+                        id_turno_fijo
+                    FROM trabajadores
+                    ORDER BY id_trabajador
+                """)
+
+                trabajadores = cursor.fetchall()
+
+                # Consultar turnos
+
+                cursor.execute("""
+                    SELECT
+                        id_turno,
+                        codigo_turno
+                    FROM turnos
+                """)
+
+                turnos = cursor.fetchall()
+
+                turnos_por_codigo = {
+                    turno[1]: turno[0]
+                    for turno in turnos
+                }
+
+                # Consultar ausencias
+
+                cursor.execute("""
+                    SELECT
+                        id_trabajador,
+                        tipo_ausencia,
+                        fecha_inicio,
+                        fecha_fin
+                    FROM ausencias
+                    WHERE fecha_inicio <= %s
+                    AND fecha_fin >= %s
+                """, (fecha_fin, fecha_inicio))
+
+                ausencias = cursor.fetchall()
+
+                # Consultar dotacion minima
+
+                cursor.execute("""
+                    SELECT
+                        t.codigo_turno,
+                        t.nombre_turno,
+                        d.cantidad_minima
+                    FROM dotacion_turnos d
+                    INNER JOIN turnos t
+                        ON d.id_turno = t.id_turno
+                    ORDER BY t.id_turno
+                """)
+
+                dotaciones = cursor.fetchall()
+
+                # GUARDAR BORRADOR
+
+                if request.method == "POST":
+
+                    if not trabajadores:
+                        return "No hay trabajadores registrados", 400
+
+                    # Crear rol mensual sin duplicarlo
+
+                    cursor.execute("""
+                        INSERT INTO roles_mensuales (
+                            mes,
+                            anio,
+                            estado
+                        )
+                        VALUES (%s, %s, 'BORRADOR')
+                        ON CONFLICT (mes, anio)
+                        DO NOTHING
+                        RETURNING id_rol_mensual
+                    """, (mes, anio))
+
+                    rol_nuevo = cursor.fetchone()
+
+                    # Impedir sobrescribir roles existentes
+
+                    if rol_nuevo is None:
+
+                        return (
+                            "El rol de este periodo ya existe. "
+                            "No se puede sobrescribir.",
+                            409
+                        )
+
+                    # Generar propuesta
+
+                    propuesta = generar_propuesta(
+                        anio,
+                        mes,
+                        trabajadores,
+                        turnos,
+                        ausencias,
+                        dotaciones
+                    )
+
+                    # Guardar asignaciones
+
+                    for trabajador in propuesta:
+
+                        id_trabajador = trabajador[
+                            "id_trabajador"
+                        ]
+
+                        for turno in trabajador["turnos"]:
+
+                            codigo = turno["codigo"]
+                            fecha = turno["fecha"]
+
+                            # Las ausencias se registran
+                            # en su propia tabla
+
+                            if codigo in ("VAC", "LIC", "INA"):
+                                continue
+
+                            # Guardar descansos
+
+                            if codigo in ("L", "LS"):
+
+                                id_turno = None
+
+                                estado = (
+                                    "LIBRE" if codigo == "L"
+                                    else "LS"
+                                )
+
+                            # Guardar turnos trabajados
+
+                            else:
+
+                                id_turno = turnos_por_codigo.get(
+                                    codigo
+                                )
+
+                                if id_turno is None:
+
+                                    raise ValueError(
+                                        f"Turno no válido: {codigo}"
+                                    )
+
+                                estado = "PROGRAMADO"
+
+                            cursor.execute("""
+                                INSERT INTO asignaciones (
+                                    id_trabajador,
+                                    id_turno,
+                                    fecha,
+                                    estado
+                                )
+                                VALUES (%s, %s, %s, %s)
+                            """, (
+                                id_trabajador,
+                                id_turno,
+                                fecha,
+                                estado
+                            ))
+
+                    conexion.commit()
+
+                    return redirect(
+                        url_for(
+                            "jefatura.planificacion",
+                            mes=mes,
+                            anio=anio
+                        )
+                    )
+
+                # CONSULTAR ROL EXISTENTE
+
+                cursor.execute("""
+                    SELECT
+                        id_rol_mensual,
+                        estado
+                    FROM roles_mensuales
+                    WHERE mes = %s
+                    AND anio = %s
+                """, (mes, anio))
+
+                rol_guardado = cursor.fetchone()
+
+                # RECUPERAR ROL GUARDADO
+
+                if rol_guardado:
+
+                    estado_rol = rol_guardado[1]
+
+                    cursor.execute("""
+                        SELECT
+                            a.id_trabajador,
+                            a.fecha,
+                            a.estado,
+                            t.codigo_turno
+                        FROM asignaciones a
+                        LEFT JOIN turnos t
+                            ON a.id_turno = t.id_turno
+                        WHERE a.fecha BETWEEN %s AND %s
+                    """, (fecha_inicio, fecha_fin))
+
+                    asignaciones = cursor.fetchall()
+
+                    asignaciones_guardadas = {}
+
+                    for asignacion in asignaciones:
+
+                        id_trabajador = asignacion[0]
+                        fecha = asignacion[1]
+                        estado = asignacion[2]
+                        codigo = asignacion[3]
+
+                        if estado == "LIBRE":
+                            codigo = "L"
+
+                        elif estado == "LS":
+                            codigo = "LS"
+
+                        asignaciones_guardadas[
+                            (id_trabajador, fecha)
+                        ] = codigo
+
+                    codigos_ausencia = {
+                        "VACACIONES": "VAC",
+                        "LICENCIA": "LIC",
+                        "INASISTENCIA": "INA"
+                    }
+
+                    propuesta = []
+
+                    for trabajador in trabajadores:
+
+                        fila = {
+                            "id_trabajador": trabajador[0],
+                            "nombre": trabajador[1],
+                            "apellido": trabajador[2],
+                            "turnos": []
+                        }
+
+                        for dia in dias:
+
+                            fecha = dia["fecha"]
+
+                            codigo = asignaciones_guardadas.get(
+                                (trabajador[0], fecha),
+                                "-"
+                            )
+
+                            # Mostrar ausencias registradas
+
+                            for ausencia in ausencias:
+
+                                if (
+                                    ausencia[0] == trabajador[0]
+                                    and ausencia[2] <= fecha <= ausencia[3]
+                                ):
+
+                                    codigo = codigos_ausencia[
+                                        ausencia[1]
+                                    ]
+
+                                    break
+
+                            fila["turnos"].append({
+                                "fecha": fecha,
+                                "codigo": codigo
+                            })
+
+                        propuesta.append(fila)
+
+                # GENERAR PROPUESTA SI NO EXISTE ROL
+
+                else:
+
+                    propuesta = generar_propuesta(
+                        anio,
+                        mes,
+                        trabajadores,
+                        turnos,
+                        ausencias,
+                        dotaciones
+                    )
+
+        # Calcular cobertura diaria
+
+        cobertura = calcular_cobertura(
+            dias,
+            propuesta,
+            dotaciones
+        )
+
+    except psycopg.Error as error:
+
+        print("Error de planificación:", error)
+
+        return "Error al procesar planificación", 500
+
+    except ValueError as error:
+
+        return str(error), 400
+
+    return render_template(
+        "jefatura/planificacion.html",
+        mes=mes,
+        anio=anio,
+        dias=dias,
+        propuesta=propuesta,
+        cobertura=cobertura,
+        estado_rol=estado_rol,
         csrf_token=session["csrf_token"]
     )
