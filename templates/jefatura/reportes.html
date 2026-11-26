@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Reportes - TurnoSmart</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/trabajadores.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/horas-extras.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/planificacion.css') }}">
+
+</head>
+
+<body>
+
+    <h1>Reportes e Indicadores</h1>
+
+    <p>Resumen de información operativa de TurnoSmart.</p>
+
+    <a href="{{ url_for('panel') }}" class="btn-volver">
+        Volver al Panel
+    </a>
+
+    <!-- FILTRO DE PERIODO -->
+
+    <h2>Seleccionar periodo</h2>
+
+    <form method="GET"
+          action="{{ url_for('jefatura.reportes') }}"
+          class="form-periodo">
+
+        <label>Mes</label>
+
+        <select name="mes">
+
+            {% set meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril',
+                'Mayo', 'Junio', 'Julio', 'Agosto',
+                'Septiembre', 'Octubre', 'Noviembre',
+                'Diciembre'
+            ] %}
+
+            {% for nombre_mes in meses %}
+
+            <option value="{{ loop.index }}"
+                {% if loop.index == mes %}selected{% endif %}>
+
+                {{ nombre_mes }}
+
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+        <label>Año</label>
+
+        <input type="number"
+               name="anio"
+               value="{{ anio }}"
+               min="2026"
+               max="2100"
+               required>
+
+        <button type="submit" class="btn-generar">
+            Consultar reporte
+        </button>
+
+    </form>
+
+    <h2>Reporte de {{ meses[mes - 1] }} {{ anio }}</h2>
+
+    <!-- TRABAJADORES -->
+
+    <h2>Dotación actual de trabajadores</h2>
+
+    <div class="contenedor-indicadores">
+
+        <div class="indicador">
+            <h3>Total de trabajadores</h3>
+            <strong>{{ trabajadores[0] }}</strong>
+        </div>
+
+        <div class="indicador">
+            <h3>Turno fijo</h3>
+            <strong>{{ trabajadores[1] }}</strong>
+        </div>
+
+        <div class="indicador">
+            <h3>Turno rotativo</h3>
+            <strong>{{ trabajadores[2] }}</strong>
+        </div>
+
+    </div>
+
+    <h3>Distribución actual por cargo</h3>
+
+    <div class="contenedor-tabla">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Cargo</th>
+                    <th>Cantidad de trabajadores</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for cargo in cargos %}
+
+                <tr>
+                    <td>{{ cargo[0] }}</td>
+                    <td>{{ cargo[1] }}</td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- PLANIFICACION -->
+
+    <h2>Planificación mensual</h2>
+
+    <p>
+        <strong>Estado del rol:</strong>
+        {{ estado_rol }}
+    </p>
+
+    <div class="contenedor-tabla">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Turno</th>
+                    <th>Asignaciones programadas</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for turno in turnos %}
+
+                <tr>
+                    <td>{{ turno[0] }}</td>
+                    <td>{{ turno[1] }}</td>
+                    <td>{{ turno[2] }}</td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <!-- AUSENCIAS -->
+
+    <h2>Ausencias registradas</h2>
+
+    <div class="contenedor-indicadores">
+
+        <div class="indicador indicador-amarillo">
+            <h3>Vacaciones</h3>
+            <strong>{{ ausencias[0] }}</strong>
+        </div>
+
+        <div class="indicador indicador-amarillo">
+            <h3>Licencias</h3>
+            <strong>{{ ausencias[1] }}</strong>
+        </div>
+
+        <div class="indicador indicador-rojo">
+            <h3>Inasistencias</h3>
+            <strong>{{ ausencias[2] }}</strong>
+        </div>
+
+    </div>
+
+    <!-- HORAS EXTRAS -->
+
+    <h2>Indicadores de horas extras</h2>
+
+    <div class="contenedor-indicadores">
+
+        <div class="indicador">
+            <h3>Publicaciones de cupos</h3>
+            <strong>{{ cupos[0] }}</strong>
+        </div>
+
+        <div class="indicador indicador-verde">
+            <h3>Publicaciones abiertas</h3>
+            <strong>{{ cupos[1] }}</strong>
+        </div>
+
+        <div class="indicador">
+            <h3>Publicaciones cerradas</h3>
+            <strong>{{ cupos[2] }}</strong>
+        </div>
+
+        <div class="indicador indicador-rojo">
+            <h3>Publicaciones canceladas</h3>
+            <strong>{{ cupos[3] }}</strong>
+        </div>
+
+        <div class="indicador">
+            <h3>Vacantes ofrecidas no canceladas</h3>
+            <strong>{{ cupos[4] }}</strong>
+        </div>
+
+        <div class="indicador">
+            <h3>Total de postulaciones</h3>
+            <strong>{{ postulaciones[0] }}</strong>
+        </div>
+
+        <div class="indicador indicador-amarillo">
+            <h3>Postulaciones pendientes</h3>
+            <strong>{{ postulaciones[1] }}</strong>
+        </div>
+
+        <div class="indicador indicador-verde">
+            <h3>Postulaciones aprobadas</h3>
+            <strong>{{ postulaciones[2] }}</strong>
+        </div>
+
+        <div class="indicador indicador-rojo">
+            <h3>Postulaciones rechazadas</h3>
+            <strong>{{ postulaciones[3] }}</strong>
+        </div>
+
+        <div class="indicador indicador-rojo">
+            <h3>Postulaciones canceladas</h3>
+            <strong>{{ postulaciones[4] }}</strong>
+        </div>
+
+        <div class="indicador">
+            <h3>Cobertura de vacantes extras</h3>
+
+            <strong>
+                {% if cobertura_extras is not none %}
+                    {{ cobertura_extras }}%
+                {% else %}
+                    N/A
+                {% endif %}
+            </strong>
+
+        </div>
+
+    </div>
+
+    <p>
+        La cobertura corresponde a las postulaciones
+        aprobadas en publicaciones no canceladas,
+        respecto de las vacantes ofrecidas.
+    </p>
+
+</body>
+
+</html>

@@ -45,9 +45,7 @@
 
             <option value="{{ loop.index }}"
                 {% if loop.index == mes %}selected{% endif %}>
-
                 {{ nombre_mes }}
-
             </option>
 
             {% endfor %}
@@ -128,6 +126,57 @@
 
     </div>
 
+    {% if estado_rol == "BORRADOR" %}
+
+    <p class="aviso-edicion">
+        Presione una celda del calendario para modificar
+        la asignación del trabajador.
+    </p>
+
+    {% endif %}
+
+    <!-- PUBLICAR ROL MENSUAL -->
+
+{% if estado_rol == "BORRADOR" %}
+
+<div class="acciones-rol">
+
+    <form method="POST"
+          action="{{ url_for('jefatura.publicar_rol') }}">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token }}">
+
+        <input type="hidden"
+               name="mes"
+               value="{{ mes }}">
+
+        <input type="hidden"
+               name="anio"
+               value="{{ anio }}">
+
+        <button type="submit"
+                class="btn-publicar"
+                onclick="return confirm('¿Está seguro de publicar el rol mensual? Una vez publicado no podrá modificarlo.')">
+
+            Publicar rol mensual
+
+        </button>
+
+    </form>
+
+</div>
+
+{% elif estado_rol == "PUBLICADO" %}
+
+<p class="aviso-publicado">
+    El rol mensual se encuentra publicado.
+    Las asignaciones ya no pueden modificarse.
+</p>
+
+{% endif %}
+
     <!-- ROL MENSUAL -->
 
     <div class="contenedor-rol">
@@ -179,7 +228,29 @@
                     {% for turno in trabajador.turnos %}
 
                     <td class="turno-{{ turno.codigo }}">
-                        {{ turno.codigo }}
+
+                        {% if estado_rol == "BORRADOR"
+                        and turno.codigo not in ("VAC", "LIC", "INA") %}
+
+                        <button type="button"
+                                class="celda-editable"
+                                data-id="{{ trabajador.id_trabajador }}"
+                                data-nombre="{{ trabajador.nombre }} {{ trabajador.apellido }}"
+                                data-fecha="{{ turno.fecha.isoformat() }}"
+                                data-codigo="{{ turno.codigo }}"
+                                onclick="abrirEdicion(this)"
+                                title="Editar asignación">
+
+                            {{ turno.codigo }}
+
+                        </button>
+
+                        {% else %}
+
+                            {{ turno.codigo }}
+
+                        {% endif %}
+
                     </td>
 
                     {% endfor %}
@@ -224,6 +295,84 @@
 
     </div>
 
+    <!-- VENTANA DE EDICION -->
+
+    <dialog id="modal-edicion">
+
+        <h2>Editar asignación</h2>
+
+        <form method="POST"
+              action="{{ url_for('jefatura.editar_asignacion') }}">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ csrf_token }}">
+
+            <input type="hidden"
+                   name="id_trabajador"
+                   id="editar-trabajador">
+
+            <input type="hidden"
+                   name="fecha"
+                   id="editar-fecha">
+
+            <p>
+                <strong>Trabajador:</strong>
+                <span id="nombre-edicion"></span>
+            </p>
+
+            <p>
+                <strong>Fecha:</strong>
+                <span id="fecha-edicion"></span>
+            </p>
+
+            <label for="editar-codigo">
+                Seleccionar turno
+            </label>
+
+            <select name="codigo"
+                    id="editar-codigo"
+                    required>
+
+                <option value="">Seleccione un turno</option>
+                <option value="24">24 - Mañana</option>
+                <option value="66">66 - Mañana reducida</option>
+                <option value="11">11 - Tarde</option>
+                <option value="180">180 - Tarde reducida</option>
+                <option value="7">7 - Noche</option>
+                <option value="L">L - Libre</option>
+                <option value="LS">LS - Saliente libre</option>
+
+            </select>
+
+            <p class="aviso-edicion">
+                Revise los descansos y turnos cercanos
+                antes de guardar la modificación.
+            </p>
+
+            <div class="acciones-modal">
+
+                <button type="button"
+                        class="btn-cancelar"
+                        onclick="cerrarEdicion()">
+
+                    Cancelar
+
+                </button>
+
+                <button type="submit"
+                        class="btn-guardar">
+
+                    Guardar cambio
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </dialog>
+
     <!-- COBERTURA DIARIA -->
 
     <h2>Cobertura diaria de turnos</h2>
@@ -240,14 +389,12 @@
             <thead>
 
                 <tr>
-
                     <th>Fecha</th>
                     <th>Turno</th>
                     <th>Dotación mínima</th>
                     <th>Asignados</th>
                     <th>Faltantes</th>
                     <th>Estado</th>
-
                 </tr>
 
             </thead>
@@ -265,23 +412,16 @@
                         </td>
 
                         <td>{{ turno.nombre }}</td>
-
                         <td>{{ turno.minimo }}</td>
-
                         <td>{{ turno.asignados }}</td>
-
                         <td>{{ turno.faltantes }}</td>
 
                         <td class="{{ 'cobertura-completa' if turno.cumple else 'cobertura-insuficiente' }}">
 
                             {% if turno.cumple %}
-
                                 Completa
-
                             {% else %}
-
                                 Falta personal
-
                             {% endif %}
 
                         </td>
@@ -293,20 +433,61 @@
                 {% else %}
 
                     <tr>
-
                         <td colspan="6">
                             No hay información de cobertura.
                         </td>
-
                     </tr>
 
                 {% endfor %}
-
             </tbody>
 
         </table>
 
     </div>
+
+    <!-- JAVASCRIPT PARA EDITAR -->
+
+    <script>
+
+        function abrirEdicion(boton) {
+
+            const datos = boton.dataset;
+
+            document.getElementById(
+                "editar-trabajador"
+            ).value = datos.id;
+
+            document.getElementById(
+                "editar-fecha"
+            ).value = datos.fecha;
+
+            document.getElementById(
+                "nombre-edicion"
+            ).textContent = datos.nombre;
+
+            document.getElementById(
+                "fecha-edicion"
+            ).textContent = datos.fecha.split("-").reverse().join("-");
+
+            document.getElementById(
+                "editar-codigo"
+            ).value = datos.codigo === "-" ? "" : datos.codigo;
+
+            document.getElementById(
+                "modal-edicion"
+            ).showModal();
+
+        }
+
+        function cerrarEdicion() {
+
+            document.getElementById(
+                "modal-edicion"
+            ).close();
+
+        }
+
+    </script>
 
 </body>
 </html>

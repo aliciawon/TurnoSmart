@@ -169,3 +169,102 @@
     background-color: #16a34a;
     color: white;
 }
+
+/* EDICION DE CELDAS */
+
+.tabla-rol .celda-editable {
+    display: block;
+    width: 100%;
+    min-height: 30px;
+    padding: 5px;
+    margin: 0;
+    background: transparent;
+    color: inherit;
+    border: none;
+    border-radius: 4px;
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.tabla-rol .celda-editable:hover {
+    background-color: rgba(128, 128, 128, 0.25);
+    outline: 2px solid #2563eb;
+}
+
+.aviso-edicion {
+    color: #2563eb;
+    font-size: 14px;
+}
+
+/* VENTANA DE EDICION */
+
+#modal-edicion {
+    width: 400px;
+    max-width: 90%;
+    padding: 25px;
+    border: 1px solid #777;
+    border-radius: 12px;
+    background-color: #ffffff;
+    color: #222222;
+    font-family: Arial, sans-serif;
+}
+
+#modal-edicion::backdrop {
+    background-color: rgba(0, 0, 0, 0.65);
+}
+
+#modal-edicion select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: 1px solid #777;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.acciones-modal {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.btn-cancelar {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    background-color: #6b7280;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-cancelar:hover {
+    background-color: #4b5563;
+}
+
+/* UBLICACION DEL ROL */
+
+.btn-publicar {
+    background-color: #dc2626;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-publicar:hover{
+    background-color: #b91c1c;;
+}
+
+.aviso-publicado {
+    background-color: #c6efce;
+    color: #166534;
+    padding: 15px;
+    border-radius: 6px;
+    font-weight: bold;
+}
