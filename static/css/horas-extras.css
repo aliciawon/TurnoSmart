@@ -87,3 +87,29 @@
     color: white;
     font-weight: bold;
 }
+
+.btn-postular,
+.btn-cancelar {
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-postular {
+    background-color: #166534;
+}
+
+.btn-postular:hover {
+    background-color: #15803d;
+}
+
+.btn-cancelar {
+    background-color: #991b1b;
+}
+
+.btn-cancelar:hover {
+    background-color: #b91c1c;
+}

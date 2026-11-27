@@ -6,6 +6,7 @@ import os
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError
 from routes.jefatura import jefatura_bp
+from routes.trabajador import trabajador_bp
 
 load_dotenv()
 
@@ -19,6 +20,7 @@ ph = PasswordHasher()
 
 app = Flask(__name__)
 app.register_blueprint(jefatura_bp, url_prefix="/jefatura")
+app.register_blueprint(trabajador_bp, url_prefix="/trabajador")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 @app.route("/")
@@ -32,15 +34,26 @@ def recuperar_contrasena():
 
 @app.route("/panel")
 def panel():
+
     if "usuario_id" not in session:
-        return render_template("index.html", error="Debes iniciar sesión para acceder al panel")
+
+        return render_template(
+            "index.html",
+            error="Debes iniciar sesión para acceder al panel"
+        )
+
     rol = session.get("id_rol")
+
     if rol == 1:
         return render_template("jefatura/panel-jefatura.html")
+
     if rol == 2:
-        print("Es Lider")
+        return render_template("panel.html")
+
     if rol == 3:
-        print("Es Trabajador")
+        return render_template("trabajador/panel-trabajador.html")
+
+    return "Acceso denegado", 403
     
     return render_template("panel.html")
 

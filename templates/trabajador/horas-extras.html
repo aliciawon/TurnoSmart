@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Horas Extras - TurnoSmart</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/trabajadores.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/horas-extras.css') }}">
+
+</head>
+
+<body>
+
+    <h1>Horas Extras Disponibles</h1>
+
+    <p>Consulta los cupos disponibles para tu cargo
+       y postula voluntariamente.</p>
+
+    <a href="{{ url_for('panel') }}">
+        Volver al panel
+    </a>
+
+    <a href="{{ url_for('trabajador.mis_postulaciones') }}">
+        Mis postulaciones
+    </a>
+
+    <div class="contenedor-tabla">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Fecha</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
+                    <th>Cargo</th>
+                    <th>Vacantes disponibles</th>
+                    <th>Acción</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for cupo in cupos %}
+
+                <tr>
+
+                    <td>{{ cupo[1].strftime('%d-%m-%Y') }}</td>
+
+                    <td>{{ cupo[2].strftime('%H:%M') }}</td>
+
+                    <td>
+
+                        {{ cupo[3].strftime('%H:%M') }}
+
+                        {% if cupo[3] < cupo[2] %}
+                            (+1 día)
+                        {% endif %}
+
+                    </td>
+
+                    <td>{{ cupo[4] }}</td>
+
+                    <td>{{ cupo[5] - cupo[6] }}</td>
+
+                    <td>
+
+                        <form method="POST"
+                              action="{{ url_for('trabajador.postular') }}"
+                              onsubmit="return confirm('¿Deseas postular a este cupo?')">
+
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="{{ csrf_token }}">
+
+                            <input type="hidden"
+                                   name="id_cupo"
+                                   value="{{ cupo[0] }}">
+
+                            <button type="submit"
+                                    class="btn-postular">
+                                Postular
+                            </button>
+
+                        </form>
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="6">
+                        No existen cupos disponibles para ti.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+</html>

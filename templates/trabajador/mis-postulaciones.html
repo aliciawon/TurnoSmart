@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Mis Postulaciones - TurnoSmart</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/trabajadores.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/horas-extras.css') }}">
+
+</head>
+
+<body>
+
+    <h1>Mis Postulaciones</h1>
+
+    <p>Consulta el estado de tus postulaciones
+       de horas extras.</p>
+
+    <a href="{{ url_for('panel') }}">
+        Volver al panel
+    </a>
+
+    <a href="{{ url_for('trabajador.horas_extras') }}">
+        Ver horas extras
+    </a>
+
+    <div class="contenedor-tabla">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Fecha del turno</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
+                    <th>Cargo</th>
+                    <th>Fecha de postulación</th>
+                    <th>Estado postulación</th>
+                    <th>Estado del cupo</th>
+                    <th>Acción</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for p in postulaciones %}
+
+                <tr>
+
+                    <td>{{ p[1].strftime('%d-%m-%Y') }}</td>
+
+                    <td>{{ p[2].strftime('%H:%M') }}</td>
+
+                    <td>
+
+                        {{ p[3].strftime('%H:%M') }}
+
+                        {% if p[3] < p[2] %}
+                            (+1 día)
+                        {% endif %}
+
+                    </td>
+
+                    <td>{{ p[4] }}</td>
+
+                    <td>
+                        {{ p[5].strftime('%d-%m-%Y %H:%M') }}
+                    </td>
+
+                    <td class="estado-{{ p[6] | lower }}">
+                        {{ p[6] }}
+                    </td>
+
+                    <td class="estado-{{ p[7] | lower }}">
+                        {{ p[7] }}
+                    </td>
+
+                    <td>
+
+                        {% if p[6] == "PENDIENTE" %}
+
+                        <form method="POST"
+                              action="{{ url_for('trabajador.cancelar_postulacion') }}"
+                              onsubmit="return confirm('¿Deseas cancelar tu postulación?')">
+
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="{{ csrf_token }}">
+
+                            <input type="hidden"
+                                   name="id_postulacion"
+                                   value="{{ p[0] }}">
+
+                            <button type="submit"
+                                    class="btn-cancelar">
+                                Cancelar
+                            </button>
+
+                        </form>
+
+                        {% else %}
+
+                            -
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="8">
+                        Todavía no tienes postulaciones registradas.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+</html>

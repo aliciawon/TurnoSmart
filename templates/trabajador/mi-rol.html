@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Mi rol mensual - TurnoSmart</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/trabajadores.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/planificacion.css') }}">
+
+</head>
+
+<body>
+
+    <h1>Mi rol mensual</h1>
+
+    <h2>{{ trabajador[1] }} {{ trabajador[2] }}</h2>
+
+    <a href="{{ url_for('panel') }}">
+        Volver al panel
+    </a>
+
+    {% set meses = [
+        'Enero', 'Febrero', 'Marzo', 'Abril',
+        'Mayo', 'Junio', 'Julio', 'Agosto',
+        'Septiembre', 'Octubre', 'Noviembre',
+        'Diciembre'
+    ] %}
+
+    <h2>Seleccionar periodo</h2>
+
+    <form method="GET"
+          action="{{ url_for('trabajador.mi_rol') }}"
+          class="form-periodo">
+
+        <label>Mes</label>
+
+        <select name="mes">
+
+            {% for nombre_mes in meses %}
+
+                <option value="{{ loop.index }}"
+                    {% if loop.index == mes %}selected{% endif %}>
+
+                    {{ nombre_mes }}
+
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+        <label>Año</label>
+
+        <input type="number"
+               name="anio"
+               value="{{ anio }}"
+               min="2026"
+               max="2100"
+               required>
+
+        <button type="submit" class="btn-generar">
+            Consultar
+        </button>
+
+    </form>
+
+    <h2>{{ meses[mes - 1] }} {{ anio }}</h2>
+
+    {% if rol_publicado %}
+
+        <p class="estado-publicado">
+            Rol mensual publicado
+        </p>
+
+        <div class="contenedor-rol">
+
+            <table class="tabla-rol">
+
+                <thead>
+
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Día</th>
+                        <th>Código</th>
+                        <th>Turno</th>
+                        <th>Entrada</th>
+                        <th>Salida</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for dia in calendario %}
+
+                        <tr>
+
+                            <td>
+                                {{ dia.fecha.strftime('%d-%m-%Y') }}
+                            </td>
+
+                            <td>{{ dia.dia }}</td>
+
+                            <td class="turno-{{ dia.codigo }}">
+                                {{ dia.codigo }}
+                            </td>
+
+                            <td>{{ dia.nombre }}</td>
+                            <td>{{ dia.inicio }}</td>
+                            <td>{{ dia.fin }}</td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    {% else %}
+
+        <p>
+            Jefatura aún no ha publicado el rol mensual
+            correspondiente a este periodo.
+        </p>
+
+    {% endif %}
+
+</body>
+
+</html>
