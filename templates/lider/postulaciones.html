@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Gestionar postulaciones - TurnoSmart</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/trabajadores.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/horas-extras.css') }}">
+
+</head>
+
+<body>
+
+    <h1>Gestionar postulaciones</h1>
+
+    <a href="{{ url_for('panel') }}">
+        Volver al panel
+    </a>
+
+    <a href="{{ url_for('lider.horas_extras') }}">
+        Mis cupos
+    </a>
+
+    <div class="contenedor-tabla">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Cupo</th>
+                    <th>Trabajador</th>
+                    <th>Cargo</th>
+                    <th>Fecha</th>
+                    <th>Entrada</th>
+                    <th>Salida</th>
+                    <th>Fecha de postulación</th>
+                    <th>Estado</th>
+                    <th>Estado del cupo</th>
+                    <th>Acciones</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for p in postulaciones %}
+
+                <tr>
+
+                    <td>{{ p[1] }}</td>
+
+                    <td>{{ p[2] }} {{ p[3] }}</td>
+
+                    <td>{{ p[4] }}</td>
+
+                    <td>{{ p[5].strftime('%d-%m-%Y') }}</td>
+
+                    <td>{{ p[6].strftime('%H:%M') }}</td>
+
+                    <td>
+
+                        {{ p[7].strftime('%H:%M') }}
+
+                        {% if p[7] < p[6] %}
+                            (+1 día)
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+                        {{ p[8].strftime('%d-%m-%Y %H:%M') }}
+                    </td>
+
+                    <td class="estado-{{ p[9] | lower }}">
+                        {{ p[9] }}
+                    </td>
+
+                    <td class="estado-{{ p[10] | lower }}">
+                        {{ p[10] }}
+                    </td>
+
+                    <td>
+
+                        {% if p[9] == "PENDIENTE"
+                              and p[10] == "ABIERTO" %}
+
+                        <form method="POST"
+                              action="{{ url_for('lider.resolver_postulacion') }}"
+                              onsubmit="return confirm('¿Confirmar decisión?')">
+
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="{{ csrf_token }}">
+
+                            <input type="hidden"
+                                   name="id_postulacion"
+                                   value="{{ p[0] }}">
+
+                            <button type="submit"
+                                    name="decision"
+                                    value="APROBADA"
+                                    class="btn-postular">
+                                Aprobar
+                            </button>
+
+                            <button type="submit"
+                                    name="decision"
+                                    value="RECHAZADA"
+                                    class="btn-cancelar">
+                                Rechazar
+                            </button>
+
+                        </form>
+
+                        {% else %}
+
+                            -
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="10">
+                        No existen postulaciones registradas.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+</html>

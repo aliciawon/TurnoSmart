@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Mis cupos - TurnoSmart</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/trabajadores.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/horas-extras.css') }}">
+
+</head>
+
+<body>
+
+    <h1>Mis cupos publicados</h1>
+
+    <a href="{{ url_for('panel') }}">
+        Volver al panel
+    </a>
+
+    <a href="{{ url_for('lider.publicar_cupo') }}">
+        Publicar nuevo cupo
+    </a>
+
+    <a href="{{ url_for('lider.postulaciones') }}">
+        Ver postulaciones
+    </a>
+
+    <div class="contenedor-tabla">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Turno</th>
+                    <th>Salida</th>
+                    <th>Cargo</th>
+                    <th>Vacantes</th>
+                    <th>Pendientes</th>
+                    <th>Aprobadas</th>
+                    <th>Disponibles</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for cupo in cupos %}
+
+                <tr>
+
+                    <td>{{ cupo[0] }}</td>
+
+                    <td>
+                        {{ cupo[1].strftime('%d-%m-%Y') }}
+                    </td>
+
+                    <td>
+
+                        {% if cupo[2].strftime('%H:%M') == '06:00' %}
+
+                            Mañana
+
+                        {% elif cupo[2].strftime('%H:%M') == '14:00' %}
+
+                            Tarde
+
+                        {% elif cupo[2].strftime('%H:%M') == '22:00' %}
+
+                            Noche
+
+                        {% else %}
+
+                            {{ cupo[2].strftime('%H:%M') }}
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        {{ cupo[3].strftime('%H:%M') }}
+
+                        {% if cupo[3] < cupo[2] %}
+
+                            (+1 día)
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>{{ cupo[4] }}</td>
+
+                    <td>{{ cupo[5] }}</td>
+
+                    <td>{{ cupo[7] }}</td>
+
+                    <td>{{ cupo[8] }}</td>
+
+                    <td>
+
+                        {% if cupo[6] == "ABIERTO" %}
+
+                            {{ [cupo[5] - cupo[8], 0] | max }}
+
+                        {% else %}
+
+                            0
+
+                        {% endif %}
+
+                    </td>
+
+                    <td class="estado-{{ cupo[6] | lower }}">
+
+                        {{ cupo[6] }}
+
+                    </td>
+
+                    <td>
+
+                        {% if cupo[6] != "CANCELADO" %}
+
+                        <form method="POST"
+                              action="{{ url_for('lider.cancelar_cupo') }}"
+                              onsubmit="return confirm('¿Cancelar el cupo y sus postulaciones activas?')">
+
+                            <input type="hidden"
+                                   name="csrf_token"
+                                   value="{{ csrf_token }}">
+
+                            <input type="hidden"
+                                   name="id_cupo"
+                                   value="{{ cupo[0] }}">
+
+                            <button type="submit"
+                                    class="btn-cancelar">
+
+                                Cancelar
+
+                            </button>
+
+                        </form>
+
+                        {% else %}
+
+                            -
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="11">
+
+                        Todavía no has publicado cupos.
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</body>
+
+</html>

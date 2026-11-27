@@ -172,10 +172,30 @@
 
 <p class="aviso-publicado">
     El rol mensual se encuentra publicado.
-    Las asignaciones ya no pueden modificarse.
+    Las asignaciones existentes no pueden modificarse. Se pueden incorporar trabajadores sin planificación.
 </p>
 
 {% endif %}
+
+    {% if estado_rol == "PUBLICADO" and nuevos_trabajadores %}
+    <h3>Incorporar trabajador sin planificación</h3>
+    <form method="POST" action="{{ url_for('jefatura.incorporar_trabajador') }}" class="form-periodo">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="mes" value="{{ mes }}">
+        <input type="hidden" name="anio" value="{{ anio }}">
+        <label for="nuevo-trabajador">Trabajador</label>
+        <select id="nuevo-trabajador" name="id_trabajador" required>
+            <option value="">Seleccione un trabajador</option>
+            {% for t in nuevos_trabajadores %}
+            <option value="{{ t[0] }}">{{ t[1] }} {{ t[2] }}</option>
+            {% endfor %}
+        </select>
+        <label for="fecha-incorporacion">Fecha de incorporación</label>
+        <input type="date" id="fecha-incorporacion" name="fecha_incorporacion"
+               min="{{ dias[0].fecha.isoformat() }}" max="{{ dias[-1].fecha.isoformat() }}" required>
+        <button class="btn-generar" type="submit" onclick="return confirm('¿Incorporar al trabajador sin modificar las asignaciones existentes?')">Asignar nuevo trabajador</button>
+    </form>
+    {% endif %}
 
     <!-- ROL MENSUAL -->
 

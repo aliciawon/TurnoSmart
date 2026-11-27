@@ -7,6 +7,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError, VerificationError
 from routes.jefatura import jefatura_bp
 from routes.trabajador import trabajador_bp
+from routes.lider import lider_bp
 
 load_dotenv()
 
@@ -21,6 +22,7 @@ ph = PasswordHasher()
 app = Flask(__name__)
 app.register_blueprint(jefatura_bp, url_prefix="/jefatura")
 app.register_blueprint(trabajador_bp, url_prefix="/trabajador")
+app.register_blueprint(lider_bp, url_prefix="/lider")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 @app.route("/")
@@ -48,7 +50,7 @@ def panel():
         return render_template("jefatura/panel-jefatura.html")
 
     if rol == 2:
-        return render_template("panel.html")
+        return render_template("lider/panel-lider.html")
 
     if rol == 3:
         return render_template("trabajador/panel-trabajador.html")

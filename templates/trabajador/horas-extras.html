@@ -4,6 +4,7 @@
 <head>
 
     <meta charset="UTF-8">
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
@@ -21,15 +22,21 @@
 
     <h1>Horas Extras Disponibles</h1>
 
-    <p>Consulta los cupos disponibles para tu cargo
-       y postula voluntariamente.</p>
+    <p>
+        Consulta los cupos disponibles para tu cargo
+        y postula voluntariamente.
+    </p>
 
     <a href="{{ url_for('panel') }}">
+
         Volver al panel
+
     </a>
 
     <a href="{{ url_for('trabajador.mis_postulaciones') }}">
+
         Mis postulaciones
+
     </a>
 
     <div class="contenedor-tabla">
@@ -40,7 +47,7 @@
 
                 <tr>
                     <th>Fecha</th>
-                    <th>Entrada</th>
+                    <th>Turno</th>
                     <th>Salida</th>
                     <th>Cargo</th>
                     <th>Vacantes disponibles</th>
@@ -55,16 +62,42 @@
 
                 <tr>
 
-                    <td>{{ cupo[1].strftime('%d-%m-%Y') }}</td>
+                    <td>
 
-                    <td>{{ cupo[2].strftime('%H:%M') }}</td>
+                        {{ cupo[1].strftime('%d-%m-%Y') }}
+
+                    </td>
+
+                    <td>
+
+                        {% if cupo[2].strftime('%H:%M') == '06:00' %}
+
+                            Mañana
+
+                        {% elif cupo[2].strftime('%H:%M') == '14:00' %}
+
+                            Tarde
+
+                        {% elif cupo[2].strftime('%H:%M') == '22:00' %}
+
+                            Noche
+
+                        {% else %}
+
+                            {{ cupo[2].strftime('%H:%M') }}
+
+                        {% endif %}
+
+                    </td>
 
                     <td>
 
                         {{ cupo[3].strftime('%H:%M') }}
 
                         {% if cupo[3] < cupo[2] %}
+
                             (+1 día)
+
                         {% endif %}
 
                     </td>
@@ -89,7 +122,9 @@
 
                             <button type="submit"
                                     class="btn-postular">
+
                                 Postular
+
                             </button>
 
                         </form>
@@ -103,7 +138,9 @@
                 <tr>
 
                     <td colspan="6">
+
                         No existen cupos disponibles para ti.
+
                     </td>
 
                 </tr>

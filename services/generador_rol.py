@@ -37,10 +37,15 @@ def obtener_dias_mes(anio, mes):
 
 def generar_propuesta(
     anio, mes, trabajadores, turnos, ausencias,
-    dotaciones=None
+    dotaciones=None, fecha_incorporacion=None, cobertura_inicial=None
 ):
 
     dias = obtener_dias_mes(anio, mes)
+
+    if fecha_incorporacion is not None:
+        dias = [dia for dia in dias if dia["fecha"] >= fecha_incorporacion]
+        if not dias:
+            raise ValueError("Fecha de incorporación fuera del periodo")
 
     propuesta = []
 
@@ -71,7 +76,7 @@ def generar_propuesta(
     }
 
     cobertura_diaria = [
-        {"24": 0, "11": 0, "7": 0}
+        dict((cobertura_inicial or {}).get(dia["fecha"], {"24": 0, "11": 0, "7": 0}))
         for dia in dias
     ]
 
@@ -118,6 +123,8 @@ def generar_propuesta(
                 raise ValueError(
                     f"{nombre} {apellido} no tiene turno fijo válido"
                 )
+
+            turno_inicial = equivalencias[turno_inicial]
 
         else:
 
@@ -355,7 +362,7 @@ def generar_propuesta(
         calendario = buscar(
             0,
             turno_inicial,
-            indice % 5,
+            0 if fecha_incorporacion is not None else indice % 5,
             0,
             None,
             0,

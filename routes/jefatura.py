@@ -516,6 +516,7 @@ def planificacion():
     fecha_fin = dias[-1]["fecha"]
 
     estado_rol = "SIN GUARDAR"
+    nuevos_trabajadores = []
 
     try:
 
@@ -731,6 +732,8 @@ def planificacion():
                     """, (fecha_inicio, fecha_fin))
 
                     asignaciones = cursor.fetchall()
+                    ids_asignados = {a[0] for a in asignaciones}
+                    nuevos_trabajadores = [t for t in trabajadores if t[0] not in ids_asignados]
 
                     asignaciones_guardadas = {}
 
@@ -838,6 +841,7 @@ def planificacion():
         propuesta=propuesta,
         cobertura=cobertura,
         estado_rol=estado_rol,
+        nuevos_trabajadores=nuevos_trabajadores,
         csrf_token=session["csrf_token"]
     )
 
@@ -1468,3 +1472,80 @@ def reportes():
         postulaciones=postulaciones,
         cobertura_extras=cobertura_extras
     )
+
+@jefatura_bp.route("/incorporar-trabajador", methods=["POST"])
+def incorporar_trabajador():
+    acceso = acceso_jefatura()
+    if acceso is not None:
+        return acceso
+    token = request.form.get("csrf_token", "")
+    if not token or token != session.get("csrf_token"):
+        return "Solicitud no válida", 400
+    try:
+        mes = int(request.form.get("mes", ""))
+        anio = int(request.form.get("anio", ""))
+        id_trabajador = int(request.form.get("id_trabajador", ""))
+        inicio = date.fromisoformat(request.form.get("fecha_incorporacion", ""))
+        if not 2026 <= anio <= 2100 or not 1 <= mes <= 12:
+            raise ValueError("Periodo no válido")
+        dias = obtener_dias_mes(anio, mes)
+        primero, ultimo = dias[0]["fecha"], dias[-1]["fecha"]
+        if not primero <= inicio <= ultimo or inicio < date.today():
+            return "La incorporación debe ser desde hoy y dentro del periodo seleccionado", 400
+        with conectar_bd() as conexion:
+            with conexion.cursor() as cursor:
+                cursor.execute("""SELECT estado FROM roles_mensuales
+                    WHERE mes=%s AND anio=%s FOR UPDATE""", (mes, anio))
+                rol = cursor.fetchone()
+                if not rol or rol[0] != "PUBLICADO":
+                    return "El rol debe estar publicado", 409
+                cursor.execute("""SELECT id_trabajador,nombre,apellido,modalidad_turno,id_turno_fijo
+                    FROM trabajadores WHERE id_trabajador=%s FOR UPDATE""", (id_trabajador,))
+                trabajador = cursor.fetchone()
+                if not trabajador:
+                    return "Trabajador no encontrado", 404
+                cursor.execute("""SELECT 1 FROM asignaciones WHERE id_trabajador=%s
+                    AND fecha BETWEEN %s AND %s""", (id_trabajador, primero, ultimo))
+                if cursor.fetchone():
+                    return "El trabajador ya tiene asignaciones en este periodo", 409
+                cursor.execute("SELECT id_turno,codigo_turno FROM turnos")
+                turnos = cursor.fetchall()
+                por_codigo = {codigo: ident for ident,codigo in turnos}
+                cursor.execute("""SELECT id_trabajador,tipo_ausencia,fecha_inicio,fecha_fin FROM ausencias
+                    WHERE id_trabajador=%s AND fecha_inicio<=%s AND fecha_fin>=%s""", (id_trabajador, ultimo, inicio))
+                ausencias = cursor.fetchall()
+                cursor.execute("""SELECT t.codigo_turno,t.nombre_turno,d.cantidad_minima
+                    FROM dotacion_turnos d JOIN turnos t ON t.id_turno=d.id_turno""")
+                dotaciones = cursor.fetchall()
+                cursor.execute("""SELECT a.fecha,t.codigo_turno,COUNT(*) FROM asignaciones a
+                    JOIN turnos t ON t.id_turno=a.id_turno
+                    WHERE a.fecha BETWEEN %s AND %s AND a.estado='PROGRAMADO'
+                    AND NOT EXISTS (SELECT 1 FROM ausencias au WHERE au.id_trabajador=a.id_trabajador
+                    AND a.fecha BETWEEN au.fecha_inicio AND au.fecha_fin)
+                    GROUP BY a.fecha,t.codigo_turno""", (inicio, ultimo))
+                cobertura = {}
+                equivalencias = {'24':'24','66':'24','11':'11','180':'11','7':'7'}
+                for fecha,codigo,cantidad in cursor.fetchall():
+                    fila = cobertura.setdefault(fecha, {'24':0,'11':0,'7':0})
+                    if codigo in equivalencias:
+                        fila[equivalencias[codigo]] += cantidad
+                propuesta = generar_propuesta(anio, mes, [trabajador], turnos, ausencias,
+                    dotaciones, fecha_incorporacion=inicio, cobertura_inicial=cobertura)
+                cantidad = 0
+                for turno in propuesta[0]['turnos']:
+                    codigo = turno['codigo']
+                    if codigo in ('VAC','LIC','INA'):
+                        continue
+                    estado = 'LIBRE' if codigo == 'L' else 'LS' if codigo == 'LS' else 'PROGRAMADO'
+                    id_turno = por_codigo[codigo] if estado == 'PROGRAMADO' else None
+                    cursor.execute("""INSERT INTO asignaciones(id_trabajador,id_turno,fecha,estado)
+                        VALUES (%s,%s,%s,%s)""", (id_trabajador,id_turno,turno['fecha'],estado))
+                    cantidad += 1
+                if not cantidad:
+                    return "No hay días disponibles para incorporar al trabajador", 400
+        return redirect(url_for('jefatura.planificacion',mes=mes,anio=anio))
+    except ValueError as error:
+        return str(error), 400
+    except psycopg.Error as error:
+        print("Error al incorporar trabajador:", error)
+        return "Error al incorporar trabajador", 500

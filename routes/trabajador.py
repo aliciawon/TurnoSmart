@@ -35,10 +35,11 @@ def acceso_trabajador():
 @trabajador_bp.route("/mi-rol")
 def mi_rol():
 
-    acceso = acceso_trabajador()
+    if "usuario_id" not in session:
+        return redirect(url_for("inicio"))
 
-    if acceso is not None:
-        return acceso
+    if session.get("id_rol") not in (2, 3):
+        return "Acceso denegado", 403
 
     hoy = date.today()
 

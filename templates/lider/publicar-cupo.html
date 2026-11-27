@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Publicar cupo - TurnoSmart</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/trabajadores.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/horas-extras.css') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/panel-lider.css') }}">
+
+</head>
+
+<body>
+
+    <h1>Publicar cupo de horas extras</h1>
+
+    <a href="{{ url_for('panel') }}">
+        Volver al panel
+    </a>
+
+    <form method="POST"
+          action="{{ url_for('lider.publicar_cupo') }}"
+          class="form-cupo">
+
+        <input type="hidden"
+               name="csrf_token"
+               value="{{ csrf_token }}">
+
+        <label for="id_cargo">Cargo requerido</label>
+
+        <select name="id_cargo" id="id_cargo" required>
+
+            <option value="">Seleccione un cargo</option>
+
+            {% for cargo in cargos %}
+
+                <option value="{{ cargo[0] }}">
+                    {{ cargo[1] }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+        <label for="fecha">Fecha</label>
+
+        <input type="date"
+               name="fecha"
+               id="fecha"
+               required>
+
+        <label for="turno">Turno requerido</label>
+
+        <select name="turno" id="turno" required>
+
+            <option value="">Seleccione un turno</option>
+
+            <option value="MANANA">Mañana</option>
+
+            <option value="TARDE">Tarde</option>
+
+            <option value="NOCHE">Noche</option>
+
+        </select>
+
+        <label for="hora_fin">Hora de salida</label>
+
+        <input type="time"
+               name="hora_fin"
+               id="hora_fin"
+               required>
+
+        <label for="cantidad">Cantidad de vacantes</label>
+
+        <input type="number"
+               name="cantidad"
+               id="cantidad"
+               min="1"
+               required>
+
+        <p>
+            La hora de entrada se asignará automáticamente
+            según el turno seleccionado.
+        </p>
+
+        <button type="submit" class="btn-postular">
+            Publicar cupo
+        </button>
+
+    </form>
+
+</body>
+
+</html>
